@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">SystemDownloader</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="tip_download_file">下载提示</string>
+    <string name="download_notification_title">下载通知栏标题</string>
+    <string name="app_status_download_fail">下载失败提示语</string>
+    <string name="app_status_downloaded">下载成功</string>
+    <string name="app_status_download">下载中</string>
+    <string name="app_status_running">下载中</string>
+    <string name="app_status_paused">暂停中</string>
+    <string name="app_status_unknown">未知状态</string>
+    <string name="等待中">等待中</string>
+</resources>
