@@ -3,8 +3,14 @@
     package="com.eiffelyk.www.systemdownloader" >
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 允许读SD卡中的数据 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- 允许写入SD卡中的数据 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <!-- 允许程序访问有关GSM网络信息 -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!--允许程序访问Wi-Fi网络状态信息-->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <!--接收连续广播-->
     <uses-permission android:name="android.permission.BROADCAST_STICKY"/>
     <!--隐藏下载通知栏-->
