@@ -25,8 +25,7 @@ import java.text.DecimalFormat;
 
 /**
  * DownloadManagerDemo
- *
- * @author <a href="http://www.trinea.cn/android/android-downloadmanager/" target="_blank">Trinea</a> 2013-5-9
+ * create by 馋猫 at 2015年2月13日11:01:55
  */
 public class MainActivity extends Activity {
 
@@ -153,7 +152,7 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 downloadManagerPro.remove(downloadId);
                 SharedPreferencesManager.getInstance(context).remove(KEY_NAME_DOWNLOAD_ID);
-                //重新编译android源码后才能使暂停和恢复下载生效 http://www.trinea.cn/android/android-downloadmanager-pro/
+                //重新编译android源码后才能使暂停和恢复下载生效 参考 http://www.trinea.cn/android/android-downloadmanager-pro/
                /* if (downloadCancel.getText().toString().trim().equals("暂停")){
                     downloadManagerPro.pauseDownload(downloadId);
                     downloadCancel.setText("继续");
@@ -232,7 +231,6 @@ public class MainActivity extends Activity {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-
             switch (msg.what) {
                 case 0:
                     int status = (Integer) msg.obj;

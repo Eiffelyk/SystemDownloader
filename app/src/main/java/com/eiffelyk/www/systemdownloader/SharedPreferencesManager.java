@@ -14,7 +14,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-
+/**
+ * 存储帮助类
+ * create by 馋猫 at 2015年2月13日10:59:18
+ */
 public class SharedPreferencesManager {
     private static final int STRING_TYPE = 1;
     private static final int INT_TYPE = 2;

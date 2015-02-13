@@ -5,11 +5,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 
-import java.lang.reflect.Method;
-
 /**
  * 下载进度查询
- * Created by 馋猫 on 2015/2/12.
+ * create by trinea
  */
 public class DownloadManagerPro {
 
@@ -22,15 +20,6 @@ public class DownloadManagerPro {
      * represents downloaded file below api 11 *
      */
     public static final String COLUMN_LOCAL_URI = "local_uri";
-
-    public static final String METHOD_NAME_PAUSE_DOWNLOAD = "pauseDownload";
-    public static final String METHOD_NAME_RESUME_DOWNLOAD = "resumeDownload";
-
-    private static boolean isInitPauseDownload = false;
-    private static boolean isInitResumeDownload = false;
-
-    private static Method pauseDownload = null;
-    private static Method resumeDownload = null;
 
     private DownloadManager downloadManager;
 
@@ -58,7 +47,7 @@ public class DownloadManagerPro {
     public int remove(long... ids){
        return downloadManager.remove(ids);
     }
-    
+
     /**
      * get downloaded byte, total byte
      *
@@ -76,7 +65,7 @@ public class DownloadManagerPro {
 
     /**
      * get download status {@link DownloadManager}
-     * @param downloadId
+     * @param downloadId  ID(long)
      * @return 返回下载状态
      */
     public int getDownloadStatus(long downloadId) {
@@ -114,92 +103,7 @@ public class DownloadManagerPro {
         return bytesAndStatus;
     }
 
-    /**
-     * pause download  此方法需要重新编译frameworks    http://www.trinea.cn/android/android-downloadmanager-pro/
-     *
-     * @param ids the IDs of the downloads to be paused
-     * @return the number of downloads actually paused, -1 if exception or method not exist
-     */
-    public int pauseDownload(long... ids) {
-        initPauseMethod();
-        if (pauseDownload == null) {
-            return -1;
-        }
 
-        try {
-            return ((Integer) pauseDownload.invoke(downloadManager, ids)).intValue();
-        } catch (Exception e) {
-            /**
-             * accept all exception, include ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-             * NullPointException
-             */
-            e.printStackTrace();
-        }
-        return -1;
-    }
-
-    /**
-     * resume download 此方法需要重新编译frameworks    http://www.trinea.cn/android/android-downloadmanager-pro/
-     *
-     * @param ids the IDs of the downloads to be resumed
-     * @return the number of downloads actually resumed, -1 if exception or method not exist
-     */
-    public int resumeDownload(long... ids) {
-        initResumeMethod();
-        if (resumeDownload == null) {
-            return -1;
-        }
-
-        try {
-            return ((Integer) resumeDownload.invoke(downloadManager, ids)).intValue();
-        } catch (Exception e) {
-            /**
-             * accept all exception, include ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-             * NullPointException
-             */
-            e.printStackTrace();
-        }
-        return -1;
-    }
-
-    /**
-     * whether exist pauseDownload and resumeDownload method in {@link DownloadManager}
-     *此方法需要重新编译frameworks    http://www.trinea.cn/android/android-downloadmanager-pro/
-     * @return
-     */
-    public static boolean isExistPauseAndResumeMethod() {
-        initPauseMethod();
-        initResumeMethod();
-        return pauseDownload != null && resumeDownload != null;
-    }
-
-    private static void initPauseMethod() {
-        if (isInitPauseDownload) {
-            return;
-        }
-
-        isInitPauseDownload = true;
-        try {
-            pauseDownload = DownloadManager.class.getMethod(METHOD_NAME_PAUSE_DOWNLOAD, long[].class);
-        } catch (Exception e) {
-            // accept all exception
-            e.printStackTrace();
-        }
-    }
-
-    private static void initResumeMethod() {
-        if (isInitResumeDownload) {
-            return;
-        }
-
-        isInitResumeDownload = true;
-        try {
-            resumeDownload = DownloadManager.class.getMethod(METHOD_NAME_RESUME_DOWNLOAD, long[].class);
-        } catch (Exception e) {
-            // accept all exception
-            e.printStackTrace();
-        }
-    }
 
     /**
      * get download file name
@@ -311,90 +215,5 @@ public class DownloadManagerPro {
             }
         }
         return result;
-    }
-
-    /**
-     * 此方法需要重新编译frameworks    http://www.trinea.cn/android/android-downloadmanager-pro/
-     */
-    public static class RequestPro extends DownloadManager.Request {
-
-        public static final String METHOD_NAME_SET_NOTI_CLASS = "setNotiClass";
-        public static final String METHOD_NAME_SET_NOTI_EXTRAS = "setNotiExtras";
-
-        private static boolean isInitNotiClass = false;
-        private static boolean isInitNotiExtras = false;
-
-        private static Method setNotiClass = null;
-        private static Method setNotiExtras = null;
-
-        /**
-         * @param uri the HTTP URI to download.
-         */
-        public RequestPro(Uri uri) {
-            super(uri);
-        }
-
-        /**
-         * set noti class, only init once
-         *
-         * @param className full class name
-         */
-        public void setNotiClass(String className) {
-            synchronized (this) {
-
-                if (!isInitNotiClass) {
-                    isInitNotiClass = true;
-                    try {
-                        setNotiClass = DownloadManager.Request.class.getMethod(METHOD_NAME_SET_NOTI_CLASS, CharSequence.class);
-                    } catch (Exception e) {
-                        // accept all exception
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            if (setNotiClass != null) {
-                try {
-                    setNotiClass.invoke(this, className);
-                } catch (Exception e) {
-                    /**
-                     * accept all exception, include ClassNotFoundException, NoSuchMethodException,
-                     * InvocationTargetException, NullPointException
-                     */
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        /**
-         * set noti extras, only init once
-         *
-         * @param extras 设置附加方法，传入方法名称
-         */
-        public void setNotiExtras(String extras) {
-            synchronized (this) {
-                if (!isInitNotiExtras) {
-                    isInitNotiExtras = true;
-                    try {
-                        setNotiExtras = DownloadManager.Request.class.getMethod(METHOD_NAME_SET_NOTI_EXTRAS, CharSequence.class);
-                    } catch (Exception e) {
-                        // accept all exception
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            if (setNotiExtras != null) {
-                try {
-                    setNotiExtras.invoke(this, extras);
-                } catch (Exception e) {
-                    /**
-                     * accept all exception, include ClassNotFoundException, NoSuchMethodException,
-                     * InvocationTargetException, NullPointException
-                     */
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 }
