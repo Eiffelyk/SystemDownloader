@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 
 
 /**
@@ -50,12 +51,12 @@ public class MainActivity extends Activity {
     private DownloadChangeObserver downloadObserver;
     private CompleteReceiver completeReceiver;
     private Context context;
+    private HashMap<String, String> map;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context =this;
         setContentView(R.layout.activity_main);
-        
         handler = new MyHandler();
         downloadManagerPro = new MyDownloadManager((DownloadManager) getSystemService(DOWNLOAD_SERVICE));
 
@@ -116,7 +117,7 @@ public class MainActivity extends Activity {
          * get download id from preferences.<br/>
          * if download id bigger than 0, means it has been downloaded, then query status and show right text;
          */
-        downloadId = SharedPreferencesManager.getInstance(context).getLong(KEY_NAME_DOWNLOAD_ID);
+        downloadId = DownloadingSHaredPreference.getInstance(context).getLong(KEY_NAME_DOWNLOAD_ID);
         updateView();
         downloadButton.setOnClickListener(new OnClickListener() {
 
@@ -126,32 +127,44 @@ public class MainActivity extends Activity {
                 if (!folder.exists() || !folder.isDirectory()) {
                     folder.mkdirs();
                 }
-                /**
-                 * 如果对下载参数不了解，或者是理解上有问题 详情请见原文链接：http://www.trinea.cn/android/android-downloadmanager/
-                 */
-                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(APK_URL));
-                request.setDestinationInExternalPublicDir(DOWNLOAD_FOLDER_NAME, DOWNLOAD_FILE_NAME);//存储位置、目录、文件名
-                request.setTitle(getString(R.string.download_notification_title));//通知栏标题
-                request.setDescription(getString(R.string.download_notification_description));//通知栏描述
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);//notify的显示形式，可以全部隐藏，可以下载时显示，可以下载完显示，可以下载时和下载完都显示
-                request.setVisibleInDownloadsUi(true);//是否显示当前下载 在系统的下载界面上
-                // request.allowScanningByMediaScanner();//允许媒体抓取
-                // request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);//下载网络形式限定
-                //request.setShowRunningNotification(false);//废弃的方法
-                request.setAllowedOverRoaming(true);//移动网络情况下是否允许漫游
-                request.setMimeType("application/cn.trinea.download.file");//设置打开的类型
-                downloadId = downloadManagerPro.getDownloadId(request);
-                /** save download id to preferences **/
-                SharedPreferencesManager.getInstance(context).putExtra(KEY_NAME_DOWNLOAD_ID, downloadId);
-                updateView();
+                if (DownloadingSHaredPreference.getInstance(context).getAllSharedPreferences().isEmpty()) {//判断你是否有正在现在的
+                    /**
+                     * 如果对下载参数不了解，或者是理解上有问题 详情请见原文链接：http://www.trinea.cn/android/android-downloadmanager/
+                     */
+                    DownloadManager.Request request = new DownloadManager.Request(Uri.parse(APK_URL));
+                    request.setDestinationInExternalPublicDir(DOWNLOAD_FOLDER_NAME, DOWNLOAD_FILE_NAME);//存储位置、目录、文件名
+                    request.setTitle(getString(R.string.download_notification_title));//通知栏标题
+                    request.setDescription(getString(R.string.download_notification_description));//通知栏描述
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);//notify的显示形式，可以全部隐藏，可以下载时显示，可以下载完显示，可以下载时和下载完都显示
+                    request.setVisibleInDownloadsUi(true);//是否显示当前下载 在系统的下载界面上
+                    // request.allowScanningByMediaScanner();//允许媒体抓取
+                    // request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);//下载网络形式限定
+                    //request.setShowRunningNotification(false);//废弃的方法
+                    request.setAllowedOverRoaming(true);//移动网络情况下是否允许漫游
+                    request.setMimeType("application/cn.trinea.download.file");//设置打开的类型
+                    downloadId = downloadManagerPro.getDownloadId(request);
+                    /** save download id to preferences **/
+                    DownloadingSHaredPreference.getInstance(context).putExtra(KEY_NAME_DOWNLOAD_ID, downloadId);//放入到正在下载中
+                    updateView();
+                }else{
+                    DownloadPrepareSHaredPreference.getInstance(context).putExtra(System.currentTimeMillis()+"", APK_URL);//放入等待中
+                    updateView();//更新状态为等待中
+                }
+                
             }
         });
         downloadCancel.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
+                //查看删除项目 是否正在下载 ,删除
+                //查看删除项目 是否在等待下载中 ，删除
+                //遍历等待列表去除第一项 加入下载中 开启下载，在等待中删除
                 downloadManagerPro.remove(downloadId);
-                SharedPreferencesManager.getInstance(context).remove(KEY_NAME_DOWNLOAD_ID);
+                DownloadingSHaredPreference.getInstance(context).remove(KEY_NAME_DOWNLOAD_ID);
+                if(!DownloadPrepareSHaredPreference.getInstance(context).getAllSharedPreferences().isEmpty()){
+                    //遍历取出所有，然后比较key大小，最小的在前边
+                }
                 //重新编译android源码后才能使暂停和恢复下载生效 参考 http://www.trinea.cn/android/android-downloadmanager-pro/
                /* if (downloadCancel.getText().toString().trim().equals("暂停")){
                     downloadManagerPro.pauseDownload(downloadId);
@@ -213,6 +226,7 @@ public class MainActivity extends Activity {
                         updateView();
                         // if download successful, install apk
                         if (downloadManagerPro.getStatusById(downloadId) == DownloadManager.STATUS_SUCCESSFUL) {
+                            //加入完成列表，在下载中删除，开始等待中的下载(加入下载中，启动下载，在等待列表中删除)
                             String apkFilePath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + DOWNLOAD_FOLDER_NAME + File.separator + DOWNLOAD_FILE_NAME;
                             install(context, apkFilePath);
                         }
