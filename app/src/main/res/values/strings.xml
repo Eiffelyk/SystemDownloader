@@ -12,4 +12,5 @@
     <string name="app_status_paused">暂停中</string>
     <string name="app_status_unknown">未知状态</string>
     <string name="等待中">等待中</string>
+    <string name="download_notification_description">下载通知栏描述</string>
 </resources>

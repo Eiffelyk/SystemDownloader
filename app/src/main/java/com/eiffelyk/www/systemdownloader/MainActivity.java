@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
     private TextView downloadPercent;
     private Button downloadCancel;
 
-    private DownloadManagerPro downloadManagerPro;
+    private MyDownloadManager downloadManagerPro;
     private long downloadId = 0;
 
     private static MyHandler handler;
@@ -57,7 +57,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         
         handler = new MyHandler();
-        downloadManagerPro = new DownloadManagerPro((DownloadManager) getSystemService(DOWNLOAD_SERVICE));
+        downloadManagerPro = new MyDownloadManager((DownloadManager) getSystemService(DOWNLOAD_SERVICE));
 
         // see android mainfest.xml, accept minetype of cn.trinea.download.file
         Intent intent = getIntent();
@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         /** observer download change **/
-        getContentResolver().registerContentObserver(DownloadManagerPro.CONTENT_URI, true, downloadObserver);
+        getContentResolver().registerContentObserver(MyDownloadManager.CONTENT_URI, true, downloadObserver);
         updateView();
     }
 
@@ -130,16 +130,16 @@ public class MainActivity extends Activity {
                  * 如果对下载参数不了解，或者是理解上有问题 详情请见原文链接：http://www.trinea.cn/android/android-downloadmanager/
                  */
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(APK_URL));
-                request.setDestinationInExternalPublicDir(DOWNLOAD_FOLDER_NAME, DOWNLOAD_FILE_NAME);
-                request.setTitle(getString(R.string.download_notification_title));
-                request.setDescription("meilishuo desc");
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setVisibleInDownloadsUi(false);
-                // request.allowScanningByMediaScanner();
-                // request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
-                // request.setShowRunningNotification(false);
-                // request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
-                request.setMimeType("application/cn.trinea.download.file");
+                request.setDestinationInExternalPublicDir(DOWNLOAD_FOLDER_NAME, DOWNLOAD_FILE_NAME);//存储位置、目录、文件名
+                request.setTitle(getString(R.string.download_notification_title));//通知栏标题
+                request.setDescription(getString(R.string.download_notification_description));//通知栏描述
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);//notify的显示形式，可以全部隐藏，可以下载时显示，可以下载完显示，可以下载时和下载完都显示
+                request.setVisibleInDownloadsUi(true);//是否显示当前下载 在系统的下载界面上
+                // request.allowScanningByMediaScanner();//允许媒体抓取
+                // request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);//下载网络形式限定
+                //request.setShowRunningNotification(false);//废弃的方法
+                request.setAllowedOverRoaming(true);//移动网络情况下是否允许漫游
+                request.setMimeType("application/cn.trinea.download.file");//设置打开的类型
                 downloadId = downloadManagerPro.getDownloadId(request);
                 /** save download id to preferences **/
                 SharedPreferencesManager.getInstance(context).putExtra(KEY_NAME_DOWNLOAD_ID, downloadId);
@@ -200,18 +200,29 @@ public class MainActivity extends Activity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
             /**
              * get the id of download which have download success, if the id is my id and it's status is successful,
              * then install it
              **/
             long completeDownloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             if (completeDownloadId == downloadId) {
-                initData();
-                updateView();
-                // if download successful, install apk
-                if (downloadManagerPro.getStatusById(downloadId) == DownloadManager.STATUS_SUCCESSFUL) {
-                    String apkFilePath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + DOWNLOAD_FOLDER_NAME + File.separator + DOWNLOAD_FILE_NAME;
-                    install(context, apkFilePath);
+                switch (action){
+                    case DownloadManager.ACTION_DOWNLOAD_COMPLETE:
+                        initData();
+                        updateView();
+                        // if download successful, install apk
+                        if (downloadManagerPro.getStatusById(downloadId) == DownloadManager.STATUS_SUCCESSFUL) {
+                            String apkFilePath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + DOWNLOAD_FOLDER_NAME + File.separator + DOWNLOAD_FILE_NAME;
+                            install(context, apkFilePath);
+                        }
+                        break;
+                    case DownloadManager.ACTION_NOTIFICATION_CLICKED://单击跳转到下载列表页面
+                        Intent intent1 = new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS);
+                        startActivity(intent1);
+                        break;
+                    default:
+                        break;
                 }
             }
         }

@@ -9,7 +9,7 @@ import android.os.Build;
  * 下载进度查询
  * create by trinea
  */
-public class DownloadManagerPro {
+public class MyDownloadManager {
 
     public static final Uri CONTENT_URI = Uri.parse("content://downloads/my_downloads");
     /**
@@ -23,7 +23,7 @@ public class DownloadManagerPro {
 
     private DownloadManager downloadManager;
 
-    public DownloadManagerPro(DownloadManager downloadManager) {
+    public MyDownloadManager(DownloadManager downloadManager) {
         this.downloadManager = downloadManager;
     }
     public long getDownloadId(DownloadManager.Request request){
