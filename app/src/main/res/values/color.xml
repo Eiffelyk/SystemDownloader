@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="alpha">#00000000</color>
+    <color name="act_good_btn_press">#58cde8</color>
+    <color name="act_good_btn_unpress">#01b3dd</color>
+    <!-- act_login_btn -->
+    <color name="act_login_btn_press">#7be765</color>
+    <color name="act_login_btn_unpress">#5dce46</color>
+</resources>
