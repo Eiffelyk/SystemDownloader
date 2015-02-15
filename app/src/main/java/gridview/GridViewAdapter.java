@@ -85,7 +85,7 @@ public class GridViewAdapter extends BaseAdapter{
             viewHolder.download_percent.setVisibility(View.GONE);
             viewHolder.progressBar_show.setVisibility(View.GONE);
             //DownloadedSHaredPreference.getInstance(context).getAllSharedPreferences();
-            GridViewBean gridViewBean1 = DownloadedSHaredPreference.getInstance(context).getObj(gridViewBean.getId()+"");
+            GridViewBean gridViewBean1 = (GridViewBean) DownloadedSHaredPreference.getInstance(context).getObj(gridViewBean.getId()+"");
             if (gridViewBean1!=null&&gridViewBean.getVersion() > gridViewBean1.getVersion()) {
                 viewHolder.download_button.setText("更新");
             } else {
@@ -100,13 +100,13 @@ public class GridViewAdapter extends BaseAdapter{
             viewHolder.download_percent.setText(getNotiPercent(gridViewBean.getDownSize(), gridViewBean.getTotalSize()));
             viewHolder.progressBar_show.setVisibility(View.VISIBLE);
             viewHolder.download_progress.setIndeterminate(true);
-            viewHolder.download_button.setText(getNotiPercent(gridViewBean.getDownSize(), gridViewBean.getDownSize()));
+            viewHolder.download_button.setText(getNotiPercent(gridViewBean.getDownSize(), gridViewBean.getTotalSize()));
             viewHolder.download_progress.setBackgroundColor(context.getResources().getColor(R.color.act_login_btn_press));
             if (gridViewBean.getTotalSize()>0){
              //正在下载有进度
                 viewHolder.download_progress.setIndeterminate(false);
-                viewHolder.download_progress.setMax(gridViewBean.getDownSize());
-                viewHolder.download_progress.setProgress(gridViewBean.getTotalSize());
+                viewHolder.download_progress.setMax(gridViewBean.getTotalSize());
+                viewHolder.download_progress.setProgress(gridViewBean.getDownSize());
             }else{
                 viewHolder.progressBar_show.setIndeterminate(true);
                 viewHolder.download_progress.setIndeterminate(true);

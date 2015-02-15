@@ -76,26 +76,39 @@ public class DownloadPrepareSHaredPreference {
         editor.commit();
     }
 
-    private String getStringFromObj(Object object) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    public void putExtraObj(String key, Object object) {
         try {
+            Editor editor = sharedPreferences.edit();
+            // 创建字节输出流
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             // 创建对象输出流，并封装字节流
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             // 将对象写入字节流
             oos.writeObject(object);
             // 将字节流编码成base64的字符窜
-            return new String(Base64.encodeBase64(baos.toByteArray()));
-        } catch (IOException e) {
-            return null;
+            String oAuth_Base64 = new String(Base64.encodeBase64(baos.toByteArray()));
+            editor.putString(key, oAuth_Base64);
+            editor.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-
-    public void putExtraObj(String key, Object content) {
-        remove(key);//防止数据类型不一致，安全起见，先remove掉
-        Editor editor = sharedPreferences.edit();
-        insertConfigure(editor, key, OBJ_TYPE, content);
-        editor.commit();
+    public Object getObj(String key) {
+        String string = getString(key);
+        try {
+            //读取字节
+            byte[] base64 = Base64.decodeBase64(string.getBytes());
+            //封装到字节流
+            ByteArrayInputStream bais = new ByteArrayInputStream(base64);
+            //再次封装
+            ObjectInputStream bis = new ObjectInputStream(bais);
+            //读取对象
+            return (Object) bis.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void putExtras(HashMap<String, Object> map) {
@@ -110,25 +123,36 @@ public class DownloadPrepareSHaredPreference {
 
 
     private void insertConfigure(Editor editor, String key, int type, Object content) {
-        String value = String.valueOf(content);
         switch (type) {
             case STRING_TYPE:
-                editor.putString(key, value);
+                editor.putString(key, String.valueOf(content));
                 break;
             case BOOLEAN_TYPE:
-                editor.putBoolean(key, Boolean.parseBoolean(value));
+                editor.putBoolean(key, Boolean.parseBoolean(String.valueOf(content)));
                 break;
             case INT_TYPE:
-                editor.putInt(key, Integer.parseInt(value));
+                editor.putInt(key, Integer.parseInt(String.valueOf(content)));
                 break;
             case FLOAT_TYPE:
-                editor.putFloat(key, Float.parseFloat(value));
+                editor.putFloat(key, Float.parseFloat(String.valueOf(content)));
                 break;
             case LONG_TYPE:
-                editor.putLong(key, Long.parseLong(value));
+                editor.putLong(key, Long.parseLong(String.valueOf(content)));
                 break;
             case OBJ_TYPE:
-                editor.putString(key, getStringFromObj(value));
+                try {
+                    // 创建字节输出流
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    // 创建对象输出流，并封装字节流
+                    ObjectOutputStream oos = new ObjectOutputStream(baos);
+                    // 将对象写入字节流
+                    oos.writeObject(content);
+                    // 将字节流编码成base64的字符窜
+                    String oAuth_Base64 = new String(Base64.encodeBase64(baos.toByteArray()));
+                    editor.putString(key, oAuth_Base64);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
         }
     }
@@ -182,21 +206,6 @@ public class DownloadPrepareSHaredPreference {
         return sharedPreferences.getAll();
     }
 
-    public <T> T getObj(String key) {
-        try {
-        //读取字节
-            byte[] base64 = Base64.decodeBase64(getString(key).getBytes());
-            //封装到字节流
-            ByteArrayInputStream baas = new ByteArrayInputStream(base64);
-            //再次封装
-            ObjectInputStream bis = new ObjectInputStream(baas);
-            //读取对象
-            return (T) bis.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     public void clearAllSharedPreferences() {
         Editor editor = sharedPreferences.edit();

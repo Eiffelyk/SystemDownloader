@@ -56,10 +56,11 @@ public class GridViewActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Log.e("馋猫", "点击效果实现==" + position);
-                downLoadStart(list.get(position));
+                downLoadStart(System.currentTimeMillis()+"",list.get(position));
             }
         });
-        //adapter.updateView(12,list.get(12));//更新当前条目数据
+        //adapter.updateView(12,list.get(12));//更新当前条目数据】
+        completeReceiver = new CompleteReceiver();
         registerReceiver(completeReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     }
 
@@ -92,7 +93,7 @@ public class GridViewActivity extends Activity {
                 updateView();
         }
     }
-    private boolean downLoadStart(GridViewBean gridViewBean){
+    private boolean downLoadStart(String key,GridViewBean gridViewBean){
         File folder = Environment.getExternalStoragePublicDirectory(DOWNLOAD_FOLDER_NAME);
         if (!folder.exists() || !folder.isDirectory()) {
             folder.mkdirs();
@@ -117,7 +118,7 @@ public class GridViewActivity extends Activity {
             /** save download id to preferences **/
             DownloadingSHaredPreference.getInstance(GridViewActivity.this).putExtra(KEY_NAME_DOWNLOAD_ID, downloadManagerPro.getDownloadId(request));//放入到正在下载中
             gridViewBean.setStatus(1);
-            DownloadingSHaredPreference.getInstance(GridViewActivity.this).putExtraObj(KEY_NAME_DOWNLOAD_OBJ, gridViewBean);//放入到正在下载中
+            DownloadingSHaredPreference.getInstance(GridViewActivity.this).putExtra(KEY_NAME_DOWNLOAD_OBJ, gridViewBean);//放入到正在下载中
             for (int i = 0; i < list.size(); i++) {
                 if (list.get(i).getId() == gridViewBean.getId()) {
                     adapter.updateView(i, gridViewBean);
@@ -125,11 +126,13 @@ public class GridViewActivity extends Activity {
             }
             return true;
         } else {
-            gridViewBean.setStatus(4);
-            DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).putExtraObj(System.currentTimeMillis() + "", gridViewBean);//放入等待中
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).getId() == gridViewBean.getId()) {
-                    adapter.updateView(i, gridViewBean);
+            if (!DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).getAllSharedPreferences().containsKey(key)){
+                gridViewBean.setStatus(4);
+                DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).putExtra(key + "", gridViewBean);//放入等待中
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).getId() == gridViewBean.getId()) {
+                        adapter.updateView(i, gridViewBean);
+                    }
                 }
             }
             return false;
@@ -137,10 +140,9 @@ public class GridViewActivity extends Activity {
     }
 
     private void downLoadComplete() {
-        // TODO: 2015/2/15 解压缩 
         //加入完成
-        GridViewBean gridViewBean = DownloadingSHaredPreference.getInstance(GridViewActivity.this).getObj(KEY_NAME_DOWNLOAD_OBJ);
-        DownloadedSHaredPreference.getInstance(GridViewActivity.this).putExtraObj(gridViewBean.getId() + "", gridViewBean);
+        GridViewBean gridViewBean = (GridViewBean) DownloadingSHaredPreference.getInstance(GridViewActivity.this).getObj(KEY_NAME_DOWNLOAD_OBJ);
+        DownloadedSHaredPreference.getInstance(GridViewActivity.this).putExtra(gridViewBean.getId() + "", gridViewBean);
         //删除正在下载中的
         DownloadingSHaredPreference.getInstance(GridViewActivity.this).clearAllSharedPreferences();
         gridViewBean.setStatus(2);
@@ -152,8 +154,8 @@ public class GridViewActivity extends Activity {
         //从等待中拿去最开始加入的，放入下载中
         if (!DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).getAllSharedPreferences().isEmpty()){
             String key = (String) getMinKey(DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).getAllSharedPreferences());
-            GridViewBean gridViewBean1 =  DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).getObj(key);
-            if(downLoadStart(gridViewBean1)){
+            GridViewBean gridViewBean1 = (GridViewBean) DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).getObj(key);
+            if(downLoadStart(key,gridViewBean1)){
                 DownloadPrepareSHaredPreference.getInstance(GridViewActivity.this).remove(key);
             }
         }
@@ -222,7 +224,7 @@ public class GridViewActivity extends Activity {
             switch (msg.what) {
                 case 0:
                     GridViewBean gridViewBean = (GridViewBean)DownloadingSHaredPreference.getInstance(activity.context).getObj(KEY_NAME_DOWNLOAD_OBJ);
-                    Log.e("馋猫","gridViewBean=handleMessage="+gridViewBean.toString());
+                    //Log.e("馋猫","gridViewBean=handleMessage="+gridViewBean.toString());
                     if (gridViewBean != null) {
                         Log.e("馋猫", "下载ing中存储的bean==" + gridViewBean.toString());
                         //0 未下载（包括更新）1 正在下载，2 下载完成，3 暂停中，4 等待下载
@@ -235,14 +237,13 @@ public class GridViewActivity extends Activity {
                                 gridViewBean.setStatus(3);
                                 break;
                             case DownloadManager.STATUS_FAILED:
-                                // TODO: 2015/2/15 下载失败 
                                 gridViewBean.setStatus(-1);
                                 break;
                             case DownloadManager.STATUS_PENDING:
                                 gridViewBean.setStatus(4);
                                 break;
                             case DownloadManager.STATUS_RUNNING:
-                                gridViewBean.setStatus(3);
+                                gridViewBean.setStatus(1);
                                 gridViewBean.setDownSize(msg.arg1);
                                 gridViewBean.setTotalSize(msg.arg2);
                                 break;
@@ -253,12 +254,11 @@ public class GridViewActivity extends Activity {
                                 gridViewBean.setStatus(-1);
                                 break;
                         }
-                        gridViewBean.setDownSize(msg.arg1);
-                        gridViewBean.setTotalSize(msg.arg2);
-                    }
-                    for (int i = 0; i < activity.list.size(); i++) {
-                        if (activity.list.get(i).getId() == gridViewBean.getId()) {
-                            activity.adapter.updateView(i, gridViewBean);
+                        //Log.e("馋猫", "修改状态完成后bean=="+gridViewBean.toString());
+                        for (int i = 0; i < activity.list.size(); i++) {
+                            if (activity.list.get(i).getId() == gridViewBean.getId()) {
+                                activity.adapter.updateView(i, gridViewBean);
+                            }
                         }
                     }
                     break;
@@ -280,16 +280,4 @@ public class GridViewActivity extends Activity {
        list.add(gridViewBean5);
        list.add(gridViewBean6);
     }
-    
-    // TODO: 2015/2/13  接收数据变化的DownloadChangeObserver
-    // TODO: 2015/2/13  接收系统发出的下载更提示进度的BroadcastReceiver
-    // TODO: 2015/2/13  BroadcastReceiver 注册成长期后台运行的
-    // TODO: 2015/2/13  下载准备判断，下载中判断，现在完成判断
-    // TODO: 2015/2/13  测试sharedPreference存储 Object 是否可行
-    // TODO: 2015/2/13  需要注意的是准备下载的sharedPreference key 使用的是时间毫秒值，之后片段要用
-    // TODO: 2015/2/13  需要注意的是完成下载的sharedPreference key 使用的是数据的id，在判断是否下载已经下载完成可以根据key直接判断，然后获取 version去判断是否更新
-    // TODO: 2015/2/13  正在进行的key使用的是一个固定值，这样可以保证是唯一值而且获取下载进度状态的时候判断更加简单
-    // TODO: 2015/2/13  完成后可以之存储id和版本号。其他数据可以不用存储
-    // TODO: 2015/2/13  准备下载的数据需要存储整个Object
-    // TODO: 2015/2/13  准备下载中需要存储的是id和longId
 }

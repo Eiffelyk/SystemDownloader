@@ -14,7 +14,7 @@
         android:id="@+id/gridView"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:numColumns="3"
+        android:numColumns="2"
         android:choiceMode="singleChoice"
         android:horizontalSpacing="4dp"
         android:verticalSpacing="4dp"
