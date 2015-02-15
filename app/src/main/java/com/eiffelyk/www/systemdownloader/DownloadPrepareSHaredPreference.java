@@ -183,11 +183,11 @@ public class DownloadPrepareSHaredPreference {
     }
 
     public <T> T getObj(String key) {
-        //读取字节
-        byte[] base64 = Base64.decodeBase64(getString(key).getBytes());
-        //封装到字节流
-        ByteArrayInputStream baas = new ByteArrayInputStream(base64);
         try {
+        //读取字节
+            byte[] base64 = Base64.decodeBase64(getString(key).getBytes());
+            //封装到字节流
+            ByteArrayInputStream baas = new ByteArrayInputStream(base64);
             //再次封装
             ObjectInputStream bis = new ObjectInputStream(baas);
             //读取对象

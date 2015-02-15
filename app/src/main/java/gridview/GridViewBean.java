@@ -16,14 +16,23 @@ public class GridViewBean implements Serializable{
     private int version;
     private int status;
 
-    public GridViewBean(int totalSize, int downSize, String title, String imageUrl, String downloadUrl, int version, int status) {
+    public GridViewBean(int id, String title, String imageUrl, String downloadUrl, int version) {
+        this.id = id;
+        this.title = title;
+        this.imageUrl = imageUrl;
+        this.downloadUrl = downloadUrl;
+        this.version = version;
+    }
+
+    public GridViewBean(int id, int totalSize, int downSize, String title, String imageUrl, String downloadUrl, int version, int status) {
+        this.id = id;
         this.totalSize = totalSize;
         this.downSize = downSize;
         this.title = title;
         this.imageUrl = imageUrl;
         this.downloadUrl = downloadUrl;
         this.version = version;
-        this.status = status; //0未下载（包括更新） 1正在下载，2下载完成，3暂停中，4等待下载
+        this.status = status;
     }
 
     @Override

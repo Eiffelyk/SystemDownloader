@@ -1,6 +1,7 @@
 package gridview;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.eiffelyk.www.systemdownloader.DownloadedSHaredPreference;
 import com.eiffelyk.www.systemdownloader.R;
 
 import java.text.DecimalFormat;
@@ -31,11 +33,12 @@ public class GridViewAdapter extends BaseAdapter{
         this.context = context;
         this.inflater = LayoutInflater.from(context);
         this.gridView =gridView;
+        Log.e("馋猫","list.size=="+this.list.size());
     }
     
     @Override
     public int getCount() {
-        return list.size()==0 ? list.size():1;
+        return list.size()!=0 ? list.size():0;
     }
 
     @Override
@@ -81,10 +84,12 @@ public class GridViewAdapter extends BaseAdapter{
             viewHolder.download_size.setVisibility(View.GONE);
             viewHolder.download_percent.setVisibility(View.GONE);
             viewHolder.progressBar_show.setVisibility(View.GONE);
-            if (gridViewBean.getVersion() < 1) { //更新 // TODO: 2015/2/13 此处判断是否需要更新
-                viewHolder.download_button.setText("下载");
-            } else {
+            //DownloadedSHaredPreference.getInstance(context).getAllSharedPreferences();
+            GridViewBean gridViewBean1 = DownloadedSHaredPreference.getInstance(context).getObj(gridViewBean.getId()+"");
+            if (gridViewBean1!=null&&gridViewBean.getVersion() > gridViewBean1.getVersion()) {
                 viewHolder.download_button.setText("更新");
+            } else {
+                viewHolder.download_button.setText("下载");
             }
             viewHolder.download_progress.setBackgroundColor(context.getResources().getColor(R.color.act_login_btn_press));
         }else if(gridViewBean.getStatus() == 1){
@@ -129,6 +134,11 @@ public class GridViewAdapter extends BaseAdapter{
             viewHolder.download_percent.setVisibility(View.GONE);
             viewHolder.progressBar_show.setVisibility(View.GONE);
             viewHolder.download_progress.setBackgroundColor(context.getResources().getColor(R.color.act_login_btn_press));
+        }else {
+            viewHolder.download_button.setText("下载失败");
+            viewHolder.download_size.setVisibility(View.GONE);
+            viewHolder.download_percent.setVisibility(View.GONE);
+            viewHolder.progressBar_show.setVisibility(View.GONE);
         }
         
            
@@ -150,6 +160,12 @@ public class GridViewAdapter extends BaseAdapter{
             download_progress = (ProgressBar) view.findViewById(R.id.download_progress);
             progressBar_show = (ProgressBar) view.findViewById(R.id.progressBar_show);
             download_button = (Button) view.findViewById(R.id.download_button);
+            download_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("馋猫","按钮别点击了");
+                }
+            });
         }
     }
 
